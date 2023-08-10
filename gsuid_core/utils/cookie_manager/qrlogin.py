@@ -148,9 +148,7 @@ async def qrcode_login(bot: Bot, ev: Event, user_id: str) -> str:
                 elif i['game_id'] == 6:
                     sruid_check = i['game_role_id']
             else:
-                if uid_check or sruid_check:
-                    pass
-                else:
+                if not uid_check and not sruid_check:
                     im = f'[登录]你的米游社账号{account_id}尚未绑定原神账号，请前往米游社操作！'
                     return await send_msg(im)
         else:
@@ -160,13 +158,12 @@ async def qrcode_login(bot: Bot, ev: Event, user_id: str) -> str:
         uid_bind_list = await sqla.get_bind_uid_list(user_id)
         sruid_bind_list = await sqla.get_bind_sruid_list(user_id)
         # 没有在gsuid绑定uid的情况
-        if not (uid_bind_list or sruid_bind_list):
+        if not uid_bind_list and not sruid_bind_list:
             logger.warning('[登录]game_token获取失败')
             im = '你还没有绑定uid, 请输入[绑定uid123456]绑定你的uid, 再发送[扫码登录]进行绑定'
             return await send_msg(im)
         if isinstance(cookie_token, int):
             return await send_msg('[登录]获取CK失败...')
-        # 比对gsuid数据库和扫码登陆获取到的uid
         if (
             uid_check in uid_bind_list
             or sruid_check in sruid_bind_list
@@ -180,12 +177,11 @@ async def qrcode_login(bot: Bot, ev: Event, user_id: str) -> str:
                     'cookie_token': cookie_token['cookie_token'],
                 }
             ).output(header='', sep=';')
-        else:
-            logger.warning('[登录]game_token获取失败')
-            im = (
-                f'检测到扫码登录UID{uid_check}与绑定UID不同, '
-                'gametoken获取失败, 请重新发送[扫码登录]进行登录！'
-            )
+        logger.warning('[登录]game_token获取失败')
+        im = (
+            f'检测到扫码登录UID{uid_check}与绑定UID不同, '
+            'gametoken获取失败, 请重新发送[扫码登录]进行登录！'
+        )
     else:
         logger.warning('[登录]game_token获取失败')
         im = '[登录]game_token获取失败: 二维码已过期'

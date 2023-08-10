@@ -29,20 +29,15 @@ class SV:
 
     def __new__(cls, *args, **kwargs):
         # 判断sv是否已经被初始化
-        if len(args) >= 1:
-            name = args[0]
-        else:
-            name = kwargs.get('name')
-
+        name = args[0] if args else kwargs.get('name')
         if name is None:
             raise ValueError('SV.name is None!')
 
         if name in SL.lst:
             return SL.lst[name]
-        else:
-            _sv = super().__new__(cls)
-            SL.lst[name] = _sv
-            return _sv
+        _sv = super().__new__(cls)
+        SL.lst[name] = _sv
+        return _sv
 
     def __init__(
         self,
@@ -54,61 +49,62 @@ class SV:
         black_list: List = [],
         white_list: List = [],
     ):
-        if not self.is_initialized:
-            logger.info(f'【{name}】模块初始化中...')
-            # sv名称，重复的sv名称将被并入一个sv里
-            self.name: str = name
-            # sv内包含的触发器
-            self.TL: Dict[str, Trigger] = {}
-            self.is_initialized = True
-            stack = traceback.extract_stack()
-            file = stack[-2].filename
-            path = Path(file)
-            parts = path.parts
-            i = parts.index('plugins')
-            plugins_name = parts[i + 1]
-            if plugins_name not in SL.detail_lst:
-                SL.detail_lst[plugins_name] = [self]
-            else:
-                SL.detail_lst[plugins_name].append(self)
+        if self.is_initialized:
+            return
+        logger.info(f'【{name}】模块初始化中...')
+        # sv名称，重复的sv名称将被并入一个sv里
+        self.name: str = name
+        # sv内包含的触发器
+        self.TL: Dict[str, Trigger] = {}
+        self.is_initialized = True
+        stack = traceback.extract_stack()
+        file = stack[-2].filename
+        path = Path(file)
+        parts = path.parts
+        i = parts.index('plugins')
+        plugins_name = parts[i + 1]
+        if plugins_name not in SL.detail_lst:
+            SL.detail_lst[plugins_name] = [self]
+        else:
+            SL.detail_lst[plugins_name].append(self)
 
-            # 判断sv是否已持久化
-            if name in config_sv:
-                self.priority = config_sv[name]['priority']
-                self.enabled = config_sv[name]['enabled']
-                self.pm = config_sv[name]['pm']
-                self.black_list = config_sv[name]['black_list']
-                self.area = config_sv[name]['area']
-                if 'white_list' not in config_sv[name]:
-                    self.white_list = white_list
-                    self.set(white_list=white_list)
-                else:
-                    self.white_list = config_sv[name]['white_list']
-            else:
-                # sv优先级
-                self.priority = priority
-                # sv是否开启
-                self.enabled = enabled
-                # 黑名单群
-                self.black_list = black_list
-                # 权限 0为master，1为superuser，2为群的群主&管理员，3为普通
-                self.pm = pm
-                # 作用范围
-                self.area = area
+        # 判断sv是否已持久化
+        if name in config_sv:
+            self.priority = config_sv[name]['priority']
+            self.enabled = config_sv[name]['enabled']
+            self.pm = config_sv[name]['pm']
+            self.black_list = config_sv[name]['black_list']
+            self.area = config_sv[name]['area']
+            if 'white_list' not in config_sv[name]:
                 self.white_list = white_list
-                # 写入
-                self.set(
-                    priority=priority,
-                    enabled=enabled,
-                    pm=pm,
-                    black_list=black_list,
-                    area=area,
-                    white_list=white_list,
-                )
+                self.set(white_list=white_list)
+            else:
+                self.white_list = config_sv[name]['white_list']
+        else:
+            # sv优先级
+            self.priority = priority
+            # sv是否开启
+            self.enabled = enabled
+            # 黑名单群
+            self.black_list = black_list
+            # 权限 0为master，1为superuser，2为群的群主&管理员，3为普通
+            self.pm = pm
+            # 作用范围
+            self.area = area
+            self.white_list = white_list
+            # 写入
+            self.set(
+                priority=priority,
+                enabled=enabled,
+                pm=pm,
+                black_list=black_list,
+                area=area,
+                white_list=white_list,
+            )
 
-            if name == '测试开关':
-                self.pm = 0
-                self.enabled = False
+        if name == '测试开关':
+            self.pm = 0
+            self.enabled = False
 
     def set(self, **kwargs):
         for var in kwargs:
@@ -140,11 +136,7 @@ class SV:
         to_me: bool = False,
     ):
         def deco(func: Callable) -> Callable:
-            if isinstance(keyword, str):
-                keyword_list = (keyword,)
-            else:
-                keyword_list = keyword
-
+            keyword_list = (keyword, ) if isinstance(keyword, str) else keyword
             for _k in keyword_list:
                 if _k not in self.TL:
                     logger.info(f'载入{type}触发器【{_k}】!')

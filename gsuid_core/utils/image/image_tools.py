@@ -60,9 +60,7 @@ def draw_center_text_by_line(
             size, _ = bbox[2] - bbox[0], bbox[3] - bbox[1]
         lenth += size
         line += char
-        if lenth < max_length and char not in pun and char != '\n':
-            pass
-        else:
+        if lenth >= max_length or char in pun or char == '\n':
             img.text((x, y), line, fill, font, anchor)
             line, lenth = '', 0
             y += h * 1.55
@@ -94,10 +92,7 @@ def draw_text_by_line(
         bbox = font.getbbox('X')
         _, h = 0, bbox[3] - bbox[1]
 
-    if line_space is None:
-        y_add = math.ceil(1.3 * h)
-    else:
-        y_add = math.ceil(h + line_space)
+    y_add = math.ceil(1.3 * h) if line_space is None else math.ceil(h + line_space)
     draw = ImageDraw.Draw(img)
     row = ""  # 存储本行文字
     length = 0  # 记录本行长度
@@ -108,11 +103,10 @@ def draw_text_by_line(
             bbox = font.getbbox('X')
             w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
 
+        row += character
         if length + w * 2 <= max_length:
-            row += character
             length += w
         else:
-            row += character
             if center:
                 if hasattr(font, 'getsize'):
                     font_size = font.getsize(row)
@@ -175,8 +169,7 @@ async def get_qq_avatar(
         avatar_url = f'http://q1.qlogo.cn/g?b=qq&nk={qid}&s=640'
     elif avatar_url is None:
         avatar_url = 'https://q1.qlogo.cn/g?b=qq&nk=3399214199&s=640'
-    char_pic = Image.open(BytesIO(get(avatar_url).content)).convert('RGBA')
-    return char_pic
+    return Image.open(BytesIO(get(avatar_url).content)).convert('RGBA')
 
 
 async def draw_pic_with_ring(
@@ -237,8 +230,7 @@ def crop_center_img(
         y1 = int(new_h / 2 - based_h / 2)
         x2 = based_w
         y2 = int(new_h / 2 + based_h / 2)
-    crop_img = resize_img.crop((x1, y1, x2, y2))
-    return crop_img
+    return resize_img.crop((x1, y1, x2, y2))
 
 
 async def get_color_bg(
@@ -284,24 +276,20 @@ class CustomizeImage:
         elif image:
             edit_bg = Image.open(BytesIO(get(image).content)).convert('RGBA')
         else:
-            _lst = list(self.bg_path.iterdir())
-            if _lst:
+            if _lst := list(self.bg_path.iterdir()):
                 path = random.choice(list(self.bg_path.iterdir()))
             else:
                 path = random.choice(list(BG_PATH.iterdir()))
             edit_bg = Image.open(path).convert('RGBA')
 
-        # 确定图片的长宽
-        bg_img = crop_center_img(edit_bg, based_w, based_h)
-        return bg_img
+        return crop_center_img(edit_bg, based_w, based_h)
 
     @staticmethod
     def get_dominant_color(pil_img: Image.Image) -> Tuple[int, int, int]:
         img = pil_img.copy()
         img = img.convert("RGBA")
         img = img.resize((1, 1), resample=0)
-        dominant_color = img.getpixel((0, 0))
-        return dominant_color
+        return img.getpixel((0, 0))
 
     @staticmethod
     def get_bg_color(
@@ -311,10 +299,7 @@ class CustomizeImage:
         color = 8
         q = edit_bg.quantize(colors=color, method=2)
         bg_color = (0, 0, 0)
-        if is_light:
-            based_light = 195
-        else:
-            based_light = 120
+        based_light = 195 if is_light else 120
         temp = 9999
         for i in range(color):
             bg = tuple(
@@ -334,24 +319,22 @@ class CustomizeImage:
         r = 125
         if max(*bg_color) > 255 - r:
             r *= -1
-        text_color = (
-            math.floor(bg_color[0] + r if bg_color[0] + r <= 255 else 255),
-            math.floor(bg_color[1] + r if bg_color[1] + r <= 255 else 255),
-            math.floor(bg_color[2] + r if bg_color[2] + r <= 255 else 255),
+        return (
+            math.floor(min(bg_color[0] + r, 255)),
+            math.floor(min(bg_color[1] + r, 255)),
+            math.floor(min(bg_color[2] + r, 255)),
         )
-        return text_color
 
     @staticmethod
     def get_char_color(bg_color: Tuple[int, int, int]) -> Tuple[int, int, int]:
         r = 140
         if max(*bg_color) > 255 - r:
             r *= -1
-        char_color = (
+        return (
             math.floor(bg_color[0] + 5 if bg_color[0] + r <= 255 else 255),
             math.floor(bg_color[1] + 5 if bg_color[1] + r <= 255 else 255),
             math.floor(bg_color[2] + 5 if bg_color[2] + r <= 255 else 255),
         )
-        return char_color
 
     @staticmethod
     def get_char_high_color(
@@ -361,12 +344,11 @@ class CustomizeImage:
         d = 20
         if max(*bg_color) > 255 - r:
             r *= -1
-        char_color = (
+        return (
             math.floor(bg_color[0] + d if bg_color[0] + r <= 255 else 255),
             math.floor(bg_color[1] + d if bg_color[1] + r <= 255 else 255),
             math.floor(bg_color[2] + d if bg_color[2] + r <= 255 else 255),
         )
-        return char_color
 
     @staticmethod
     def get_bg_detail_color(
@@ -375,12 +357,11 @@ class CustomizeImage:
         r = 140
         if max(*bg_color) > 255 - r:
             r *= -1
-        bg_detail_color = (
+        return (
             math.floor(bg_color[0] - 20 if bg_color[0] + r <= 255 else 255),
             math.floor(bg_color[1] - 20 if bg_color[1] + r <= 255 else 255),
             math.floor(bg_color[2] - 20 if bg_color[2] + r <= 255 else 255),
         )
-        return bg_detail_color
 
     @staticmethod
     def get_highlight_color(

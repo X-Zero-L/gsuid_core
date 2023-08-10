@@ -91,5 +91,4 @@ def HMCASHA256(data: str, key: str):
 def gen_payment_sign(data):
     data = dict(sorted(data.items(), key=lambda x: x[0]))
     value = ''.join([str(i) for i in data.values()])
-    sign = HMCASHA256(value, '6bdc3982c25f3f3c38668a32d287d16b')
-    return sign
+    return HMCASHA256(value, '6bdc3982c25f3f3c38668a32d287d16b')

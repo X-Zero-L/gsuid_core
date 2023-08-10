@@ -72,12 +72,12 @@ def get_command_bg(command: str, tag_type: str):
 
 
 def _c(data: Union[int, str, bool]) -> Tuple[int, int, int]:
-    gray_color = (184, 184, 184)
-
     if isinstance(data, bool):
-        color = tag_color['prefix'] if data else gray_color
+        gray_color = (184, 184, 184)
+
+        return tag_color['prefix'] if data else gray_color
     elif isinstance(data, str):
-        color = (
+        return (
             tag_color['prefix']
             if data == 'ALL'
             else tag_color['command']
@@ -86,25 +86,25 @@ def _c(data: Union[int, str, bool]) -> Tuple[int, int, int]:
         )
     else:
         colors = list(tag_color.values())
-        if data <= len(colors) and data >= 0:
-            color = colors[data]
-        else:
-            color = tag_color['other']
-    return color
+        return (
+            colors[data]
+            if data <= len(colors) and data >= 0
+            else tag_color['other']
+        )
 
 
 def _t(data: Union[int, str, bool]) -> str:
     if isinstance(data, bool):
-        text = '开启' if data else '关闭'
+        return '开启' if data else '关闭'
     elif isinstance(data, str):
-        text = '不限' if data == 'ALL' else '群聊' if data == 'GROUP' else '私聊'
+        return '不限' if data == 'ALL' else '群聊' if data == 'GROUP' else '私聊'
     else:
         texts = ['主人', '超管', '群主', '管理', '频管', '子管', '正常', '低', '黑']
-        if data <= len(texts) and data >= 0:
-            text = ['主人', '超管', '群主', '管理', '频管', '子管', '正常', '低', '黑'][data]
-        else:
-            text = '最低'
-    return text
+        return (
+            ['主人', '超管', '群主', '管理', '频管', '子管', '正常', '低', '黑'][data]
+            if data <= len(texts) and data >= 0
+            else '最低'
+        )
 
 
 def get_plugin_bg(plugin_name: str, sv_list: List[SV]):
@@ -143,13 +143,7 @@ def get_plugin_bg(plugin_name: str, sv_list: List[SV]):
         )
         img_list.append(sv_img)
 
-    img = Image.new(
-        'RGBA',
-        (
-            900,
-            plugin_title + sum([i.size[1] for i in img_list]),
-        ),
-    )
+    img = Image.new('RGBA', (900, plugin_title + sum(i.size[1] for i in img_list)))
     img_draw = ImageDraw.Draw(img)
     img_draw.rounded_rectangle((10, 26, 890, 76), 10, (230, 202, 167))
     img_draw.text((450, 51), plugin_name, (62, 62, 62), core_font(42), 'mm')
@@ -172,7 +166,7 @@ async def get_help_img() -> Image.Image:
         img_list.append(plugin_img)
 
     x = 900
-    y = 200 + sum([i.size[1] for i in img_list])
+    y = 200 + sum(i.size[1] for i in img_list)
     # img = await get_color_bg(x, y)
     img = Image.new('RGBA', (x, y), (255, 255, 255))
     title = Image.open(TEXT_PATH / 'title.png')

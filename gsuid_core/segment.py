@@ -31,8 +31,7 @@ class MessageSegment:
                 return Message(type='image', data=img)
             with open(img, 'rb') as fp:
                 img = fp.read()
-        msg = Message(type='image', data=f'base64://{b64encode(img).decode()}')
-        return msg
+        return Message(type='image', data=f'base64://{b64encode(img).decode()}')
 
     @staticmethod
     def text(content: str) -> Message:
@@ -52,15 +51,14 @@ class MessageSegment:
                 msg_list.append(msg)
             elif isinstance(msg, bytes):
                 msg_list.append(MessageSegment.image(msg))
+            elif msg.startswith('base64://'):
+                msg_list.append(Message(type='image', data=msg))
+            elif msg.startswith('http'):
+                msg_list.append(
+                    Message(type='image', data=f'link://{msg}')
+                )
             else:
-                if msg.startswith('base64://'):
-                    msg_list.append(Message(type='image', data=msg))
-                elif msg.startswith('http'):
-                    msg_list.append(
-                        Message(type='image', data=f'link://{msg}')
-                    )
-                else:
-                    msg_list.append(MessageSegment.text(msg))
+                msg_list.append(MessageSegment.text(msg))
         return Message(type='node', data=msg_list)
 
     @staticmethod
@@ -84,16 +82,15 @@ class MessageSegment:
                 file = fp.read()
         elif isinstance(content, bytes):
             file = content
+        elif content.startswith('http'):
+            link = content
+            return Message(
+                type='file',
+                data=f'{file_name}|link://{link}',
+            )
         else:
-            if content.startswith('http'):
-                link = content
-                return Message(
-                    type='file',
-                    data=f'{file_name}|link://{link}',
-                )
-            else:
-                with open(content, 'rb') as fp:
-                    file = fp.read()
+            with open(content, 'rb') as fp:
+                file = fp.read()
         return Message(
             type='file',
             data=f'{file_name}|{b64encode(file).decode()}',

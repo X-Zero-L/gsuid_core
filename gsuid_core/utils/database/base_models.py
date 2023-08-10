@@ -48,10 +48,7 @@ class BaseIDModel(SQLModel):
 
     @classmethod
     def get_gameid_name(cls, game_name: Optional[str] = None):
-        if game_name:
-            return f'{game_name}_uid'
-        else:
-            return 'uid'
+        return f'{game_name}_uid' if game_name else 'uid'
 
     @classmethod
     @with_session
@@ -67,9 +64,7 @@ class BaseIDModel(SQLModel):
     async def base_select_data(
         cls, session: AsyncSession, model: Type[T_BaseIDModel], **data
     ) -> Optional[T_BaseIDModel]:
-        conditions = []
-        for key, value in data.items():
-            conditions.append(getattr(model, key) == value)
+        conditions = [getattr(model, key) == value for key, value in data.items()]
         where_clause = and_(*conditions)
         sql = select(model).where(where_clause)
         result = await session.execute(sql)
@@ -187,10 +182,7 @@ class Bind(BaseModel):
         else:
             uid_list = uid.split('_')
 
-        if uid_list:
-            return uid_list
-        else:
-            return None
+        return uid_list if uid_list else None
 
     @classmethod
     async def get_uid_by_game(
@@ -200,9 +192,7 @@ class Bind(BaseModel):
         game_name: Optional[str] = None,
     ) -> Optional[str]:
         result = await cls.get_uid_list_by_game(user_id, bot_id, game_name)
-        if result is None or not result:
-            return None
-        return result[0]
+        return None if result is None or not result else result[0]
 
     @classmethod
     async def bind_exists(
@@ -475,10 +465,7 @@ class User(BaseModel):
         cls, uid: str, game_name: Optional[str] = None
     ) -> bool:
         data = await cls.get_user_attr_by_uid(uid, 'status', game_name)
-        if not data:
-            return True
-        else:
-            return False
+        return not data
 
     @classmethod
     @with_session
@@ -489,7 +476,7 @@ class User(BaseModel):
         sql = select(cls).filter(_switch != 'off')
         data = await session.execute(sql)
         data_list: List[T_User] = data.scalars().all()
-        return [user for user in data_list]
+        return list(data_list)
 
     @classmethod
     @with_session
@@ -526,7 +513,7 @@ class User(BaseModel):
         cls, uid: str, game_name: Optional[str] = None
     ) -> bool:
         data = await cls.select_data_by_uid(uid, game_name)
-        return True if data else False
+        return bool(data)
 
     @classmethod
     @with_session
@@ -609,7 +596,7 @@ class Cache(BaseIDModel):
         )
         result = await session.execute(sql)
         data: List["Cache"] = result.scalars().all()
-        return data[0].cookie if len(data) >= 1 else None
+        return data[0].cookie if data else None
 
     @classmethod
     @with_session

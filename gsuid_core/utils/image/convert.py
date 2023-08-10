@@ -48,11 +48,9 @@ async def convert_img(
         img.save(result_buffer, format='JPEG', quality=85)
         res = result_buffer.getvalue()
         if is_base64:
-            res = 'base64://' + b64encode(res).decode()
+            res = f'base64://{b64encode(res).decode()}'
         return res
-    elif isinstance(img, bytes):
-        pass
-    else:
+    elif not isinstance(img, bytes):
         async with aiofiles.open(img, 'rb') as fp:
             img = await fp.read()
     return f'base64://{b64encode(img).decode()}'

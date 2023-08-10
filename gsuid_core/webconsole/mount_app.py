@@ -264,10 +264,7 @@ class UserBindFormAdmin(admin.FormAdmin):
             logger.warning(e)
             return BaseApiOut(status=-1, msg='你输入的CK可能已经失效/或者该用户ID未绑定UID')
         ok_num = im.count('成功')
-        if ok_num < 1:
-            return BaseApiOut(status=-1, msg=im)
-        else:
-            return BaseApiOut(msg=im)
+        return BaseApiOut(status=-1, msg=im) if ok_num < 1 else BaseApiOut(msg=im)
 
 
 class GsAdminModel(admin.ModelAdmin):

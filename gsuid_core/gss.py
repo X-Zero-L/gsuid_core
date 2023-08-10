@@ -19,10 +19,7 @@ if not gss.is_load:
         else:
             source_i = inspect.getsource(repeat_jobs[i.name].func)
             source_j = inspect.getsource(i.func)
-            if source_i == source_j:
-                scheduler.remove_job(i.id)
-            else:
+            if source_i != source_j:
                 logger.warning(f'发现重复函数名定时任务{i.name}, 移除该任务...')
-                scheduler.remove_job(i.id)
-
+            scheduler.remove_job(i.id)
     del repeat_jobs

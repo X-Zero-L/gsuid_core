@@ -86,30 +86,26 @@ async def handle_event(ws: _Bot, msg: MessageReceive):
         )
         for sv in SL.lst
         for tr in SL.lst[sv].TL
-        if (
-            SL.lst[sv].enabled
-            and user_pm <= SL.lst[sv].pm
-            and msg.group_id not in SL.lst[sv].black_list
-            and msg.user_id not in SL.lst[sv].black_list
-            and (
-                True
-                if SL.lst[sv].area == 'ALL'
-                or (msg.group_id and SL.lst[sv].area == 'GROUP')
-                or (not msg.group_id and SL.lst[sv].area == 'DIRECT')
-                else False
-            )
-            and (
-                True
-                if (not SL.lst[sv].white_list or SL.lst[sv].white_list == [''])
-                else (
-                    msg.user_id in SL.lst[sv].white_list
-                    or msg.group_id in SL.lst[sv].white_list
-                )
+        if SL.lst[sv].enabled
+        and user_pm <= SL.lst[sv].pm
+        and msg.group_id not in SL.lst[sv].black_list
+        and msg.user_id not in SL.lst[sv].black_list
+        and bool(
+            SL.lst[sv].area == 'ALL'
+            or (msg.group_id and SL.lst[sv].area == 'GROUP')
+            or (not msg.group_id and SL.lst[sv].area == 'DIRECT')
+        )
+        and (
+            True
+            if (not SL.lst[sv].white_list or SL.lst[sv].white_list == [''])
+            else (
+                msg.user_id in SL.lst[sv].white_list
+                or msg.group_id in SL.lst[sv].white_list
             )
         )
     ]
     await asyncio.gather(*pending, return_exceptions=True)
-    if len(valid_event) >= 1:
+    if valid_event:
         sorted_event = sorted(valid_event.items(), key=lambda x: x[1])
         for trigger, _ in sorted_event:
             _event = deepcopy(event)

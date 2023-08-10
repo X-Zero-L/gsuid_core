@@ -41,9 +41,7 @@ from .api import (
 
 async def get_ambr_event_info() -> Optional[Dict[str, AmbrEvent]]:
     data = await _ambr_request(url=AMBR_EVENT_URL)
-    if isinstance(data, Dict):
-        return cast(Dict[str, AmbrEvent], data)
-    return None
+    return cast(Dict[str, AmbrEvent], data) if isinstance(data, Dict) else None
 
 
 async def get_ambr_char_data(id: Union[int, str]) -> Optional[AmbrCharacter]:

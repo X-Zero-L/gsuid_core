@@ -32,51 +32,43 @@ is_pic_error = core_plugins_config.get_config('ChangeErrorToPic').data
 
 
 def get_error(retcode: Union[int, str]) -> str:
-    if retcode == -51:
+    if retcode in [-100, 10001]:
+        return '您的cookie已经失效, 请重新获取!'
+    elif retcode == -10001:
+        return '请求体出错, 请检查具体实现代码...'
+    elif retcode == -201:
+        return '你的账号可能已被封禁, 请联系米游社客服...'
+    elif retcode == -400:
+        return '请输入更详细的名称...'
+    elif retcode == -501101:
+        return '当前角色冒险等阶未达到10级, 暂时无法参加此活动...'
+    elif retcode in [-51, 10104]:
         return CK_HINT
-    elif retcode == -100:
-        return '您的cookie已经失效, 请重新获取!'
-    elif retcode == 10001:
-        return '您的cookie已经失效, 请重新获取!'
+    elif retcode == -512009:
+        return '[留影叙佳期]已经获取过该内容~!'
+    elif retcode == 1008:
+        return '该API需要CK, 查询的用户/UID未绑定CK...'
     elif retcode == 10101:
         return '当前查询CK已超过每日30次上限!'
     elif retcode == 10102:
         return '当前查询id已经设置了隐私, 无法查询!'
-    elif retcode == 1034:
-        return VERIFY_HINT
-    elif retcode == -10001:
-        return '请求体出错, 请检查具体实现代码...'
-    elif retcode == 10104:
-        return CK_HINT
-    elif retcode == -512009:
-        return '[留影叙佳期]已经获取过该内容~!'
-    elif retcode == -201:
-        return '你的账号可能已被封禁, 请联系米游社客服...'
-    elif retcode == -501101:
-        return '当前角色冒险等阶未达到10级, 暂时无法参加此活动...'
-    elif retcode == 400:
-        return '[MINIGG]暂未找到此内容...'
-    elif retcode == -400:
-        return '请输入更详细的名称...'
-    elif retcode == 1008:
-        return '该API需要CK, 查询的用户/UID未绑定CK...'
-    elif retcode == 10104:
-        return 'CK与用户信息不符, 请检查代码实现...'
-    elif retcode == -999:
+    elif retcode in [1034, -999]:
         return VERIFY_HINT
     elif retcode == 125:
         return '该充值方式暂时不可用!'
     elif retcode == 126:
         return '该充值方式不正确!'
+    elif retcode == 400:
+        return '[MINIGG]暂未找到此内容...'
     else:
         return f'未知错误, 错误码为{retcode}!'
 
 
 def get_error_type(retcode: Union[int, str]) -> str:
     retcode = int(retcode)
-    if retcode in [-51, 10104]:
+    if retcode in {-51, 10104}:
         return '绑定信息错误'
-    elif retcode in [-400, 400]:
+    elif retcode in {-400, 400}:
         return 'MGGApi错误'
     else:
         return 'Api错误'

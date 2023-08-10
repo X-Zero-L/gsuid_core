@@ -120,13 +120,11 @@ class BaseMysApi:
         ...
 
     def get_device_id(self) -> str:
-        device_id = str(uuid.uuid4()).upper()
-        return device_id
+        return str(uuid.uuid4()).upper()
 
     def generate_seed(self, length: int):
         characters = '0123456789abcdef'
-        result = ''.join(random.choices(characters, k=length))
-        return result
+        return ''.join(random.choices(characters, k=length))
 
     async def generate_fp_by_uid(self, uid: str) -> str:
         seed_id = self.generate_seed(16)
@@ -181,7 +179,7 @@ class BaseMysApi:
             )
         else:
             server_id = self.RECOGNIZE_SERVER.get(uid[0])
-            is_os = False if int(uid[0]) < 6 else True
+            is_os = int(uid[0]) >= 6
         ex_params = '&'.join([f'{k}={v}' for k, v in params.items()])
         if is_os:
             _URL = self.MAPI[f'{URL}_OS']
@@ -201,14 +199,13 @@ class BaseMysApi:
             if ck is None:
                 return -51
             HEADER['Cookie'] = ck
-        data = await self._mys_request(
+        return await self._mys_request(
             url=_URL,
             method='GET',
             header=HEADER,
             params=params if params else {'server': server_id, 'role_id': uid},
-            use_proxy=True if is_os else False,
+            use_proxy=bool(is_os),
         )
-        return data
 
     async def _mys_req_get(
         self,
@@ -233,14 +230,13 @@ class BaseMysApi:
             if ck is None:
                 return -51
             HEADER['Cookie'] = ck
-        data = await self._mys_request(
+        return await self._mys_request(
             url=_URL,
             method='GET',
             header=HEADER,
             params=params,
             use_proxy=use_proxy,
         )
-        return data
 
     async def _mys_request(
         self,
@@ -443,11 +439,7 @@ class MysApi(BaseMysApi):
     async def _pass(
         self, gt: str, ch: str, header: Dict
     ) -> Tuple[Optional[str], Optional[str]]:
-        # 警告：使用该服务（例如某RR等）需要注意风险问题
-        # 本项目不以任何形式提供相关接口
-        # 代码来源：GITHUB项目MIT开源
-        _pass_api = core_plugins_config.get_config('_pass_API').data
-        if _pass_api:
+        if _pass_api := core_plugins_config.get_config('_pass_API').data:
             data = await self._mys_request(
                 url=f'{_pass_api}&gt={gt}&challenge={ch}',
                 method='GET',
@@ -455,9 +447,8 @@ class MysApi(BaseMysApi):
             )
             if isinstance(data, int):
                 return None, None
-            else:
-                validate = data['data']['validate']
-                ch = data['data']['challenge']
+            validate = data['data']['validate']
+            ch = data['data']['challenge']
         else:
             validate = None
 
@@ -523,7 +514,7 @@ class MysApi(BaseMysApi):
         )
 
     def check_os(self, uid: str) -> bool:
-        return False if int(str(uid)[0]) < 6 else True
+        return int(uid[0]) >= 6
 
     async def get_info(self, uid, ck: Optional[str]) -> Union[IndexData, int]:
         data = await self.simple_mys_req('PLAYER_INFO_URL', uid, cookie=ck)
@@ -708,8 +699,7 @@ class MysApi(BaseMysApi):
         if ck is None:
             return -51
         hk4e_token = await self.get_hk4e_token(uid)
-        header = {}
-        header['Cookie'] = f'{ck};{hk4e_token}'
+        header = {'Cookie': f'{ck};{hk4e_token}'}
         params = {
             'lang': 'zh-cn',
             'badge_uid': uid,
@@ -721,9 +711,7 @@ class MysApi(BaseMysApi):
         data = await self._mys_request(
             self.MAPI['CALENDAR_URL'], 'GET', header, params
         )
-        if isinstance(data, Dict):
-            return cast(RolesCalendar, data['data'])
-        return data
+        return cast(RolesCalendar, data['data']) if isinstance(data, Dict) else data
 
     async def get_bs_index(self, uid: str) -> Union[int, BsIndex]:
         server_id = self.RECOGNIZE_SERVER.get(uid[0])
@@ -731,8 +719,7 @@ class MysApi(BaseMysApi):
         if ck is None:
             return -51
         hk4e_token = await self.get_hk4e_token(uid)
-        header = {}
-        header['Cookie'] = f'{ck};{hk4e_token}'
+        header = {'Cookie': f'{ck};{hk4e_token}'}
         data = await self._mys_request(
             self.MAPI['BS_INDEX_URL'],
             'GET',
@@ -745,9 +732,7 @@ class MysApi(BaseMysApi):
                 'activity_id': 20220301153521,
             },
         )
-        if isinstance(data, Dict):
-            return cast(BsIndex, data['data'])
-        return data
+        return cast(BsIndex, data['data']) if isinstance(data, Dict) else data
 
     async def post_draw(self, uid: str, role_id: int) -> Union[int, Dict]:
         server_id = self.RECOGNIZE_SERVER.get(uid[0])
@@ -755,8 +740,7 @@ class MysApi(BaseMysApi):
         if ck is None:
             return -51
         hk4e_token = await self.get_hk4e_token(uid)
-        header = {}
-        header['Cookie'] = f'{ck};{hk4e_token}'
+        header = {'Cookie': f'{ck};{hk4e_token}'}
         data = await self._mys_request(
             self.MAPI['RECEIVE_URL'],
             'POST',
@@ -964,10 +948,7 @@ class MysApi(BaseMysApi):
         self, stoken: str, mys_id: str, full_sk: Optional[str] = None
     ) -> Union[CookieTokenInfo, int]:
         HEADER = copy.deepcopy(self._HEADER)
-        if full_sk:
-            HEADER['Cookie'] = full_sk
-        else:
-            HEADER['Cookie'] = f'stuid={mys_id};stoken={stoken}'
+        HEADER['Cookie'] = full_sk if full_sk else f'stuid={mys_id};stoken={stoken}'
         data = await self._mys_request(
             url=self.MAPI['GET_COOKIE_TOKEN_URL'],
             method='GET',
@@ -1033,7 +1014,7 @@ class MysApi(BaseMysApi):
         return data
 
     async def get_authkey_by_cookie(self, uid: str) -> Union[AuthKeyInfo, int]:
-        server_id = self.RECOGNIZE_SERVER.get(str(uid)[0])
+        server_id = self.RECOGNIZE_SERVER.get(uid[0])
         HEADER = copy.deepcopy(self._HEADER)
         stoken = await self.get_stoken(uid)
         if stoken is None:
@@ -1081,7 +1062,7 @@ class MysApi(BaseMysApi):
             'uid': f'{uid}',
             'region': f'{server_id}',
         }
-        if int(str(uid)[0]) < 6:
+        if int(uid[0]) < 6:
             url = self.MAPI['HK4E_LOGIN_URL']
         else:
             url = self.MAPI['HK4E_LOGIN_URL_OS']
@@ -1090,21 +1071,19 @@ class MysApi(BaseMysApi):
 
         async with ClientSession() as client:
             async with client.request(
-                method='POST',
-                url=url,
-                headers=header,
-                json=data,
-                proxy=self.proxy_url if use_proxy else None,
-                timeout=300,
-            ) as resp:
+                        method='POST',
+                        url=url,
+                        headers=header,
+                        json=data,
+                        proxy=self.proxy_url if use_proxy else None,
+                        timeout=300,
+                    ) as resp:
                 raw_data = await resp.json()
-                if 'retcode' in raw_data and raw_data['retcode'] == 0:
-                    _k = resp.cookies['e_hk4e_token'].key
-                    _v = resp.cookies['e_hk4e_token'].value
-                    ck = f'{_k}={_v}'
-                    return ck
-                else:
+                if 'retcode' not in raw_data or raw_data['retcode'] != 0:
                     return None
+                _k = resp.cookies['e_hk4e_token'].key
+                _v = resp.cookies['e_hk4e_token'].value
+                return f'{_k}={_v}'
 
     async def get_regtime_data(self, uid: str) -> Union[RegTime, int]:
         hk4e_token = await self.get_hk4e_token(uid)
@@ -1121,10 +1100,7 @@ class MysApi(BaseMysApi):
             params,
             {'Cookie': f'{hk4e_token};{ck_token}' if int(uid[0]) <= 5 else {}},
         )
-        if isinstance(data, Dict):
-            return cast(RegTime, data['data'])
-        else:
-            return data
+        return cast(RegTime, data['data']) if isinstance(data, Dict) else data
 
     '''充值相关'''
 
@@ -1193,9 +1169,7 @@ class MysApi(BaseMysApi):
             header=HEADER,
             data=data,
         )
-        if isinstance(resp, int):
-            return resp
-        return cast(MysOrder, resp['data'])
+        return resp if isinstance(resp, int) else cast(MysOrder, resp['data'])
 
     async def check_order(
         self, order: MysOrder, uid: str
@@ -1217,6 +1191,4 @@ class MysApi(BaseMysApi):
             header=HEADER,
             params=data,
         )
-        if isinstance(resp, int):
-            return resp
-        return cast(MysOrderCheck, resp['data'])
+        return resp if isinstance(resp, int) else cast(MysOrderCheck, resp['data'])

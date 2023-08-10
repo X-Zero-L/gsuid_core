@@ -43,12 +43,11 @@ def get_text_panel(label: str, name: str, value: str):
 
 def get_grid_panel(content: List[Dict]):
     _data = [{'body': [i]} for i in content]
-    data = {
+    return {
         'type': 'grid',
         'columns': _data,
         'id': 'u:18d6cb8e78bb',
     }
-    return data
 
 
 def get_container_panel(content: List[Dict]):
@@ -58,7 +57,7 @@ def get_container_panel(content: List[Dict]):
         'items': [
             {
                 'type': 'container',
-                'body': [content[0]] if len(content) >= 1 else [],
+                'body': [content[0]] if content else [],
                 'size': 'xs',
                 'style': {
                     'position': 'static',

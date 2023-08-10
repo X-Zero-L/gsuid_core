@@ -13,7 +13,7 @@ def get_sv_panel(
     white_list: List = [],
 ):
     api = f'/genshinuid/setSV/{name}'
-    card = {
+    return {
         "type": "service",
         "body": {
             'type': 'card',
@@ -290,8 +290,6 @@ def get_sv_panel(
         },
         "id": "u:4c2981f6a055",
     }
-
-    return card
 
 
 def get_sv_page():

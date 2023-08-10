@@ -35,7 +35,7 @@ async def get_user_card(bot_id: str, user_id: str) -> Union[bytes, str]:
     w, h = 750, len(max(uid_list, sr_uid_list)) * 900 + 470
 
     # 获取背景图片各项参数
-    _id = str(user_id)
+    _id = user_id
     if _id.startswith('http'):
         char_pic = await get_qq_avatar(avatar_url=_id)
     else:
@@ -49,7 +49,7 @@ async def get_user_card(bot_id: str, user_id: str) -> Union[bytes, str]:
 
     title_draw = ImageDraw.Draw(title)
     title_draw.text(
-        (375, 444), f'{bot_id} - {user_id}', (29, 29, 29), core_font(30), 'mm'
+        (375, 444), f'{bot_id} - {_id}', (29, 29, 29), core_font(30), 'mm'
     )
     img.paste(title, (0, 0), title)
 
@@ -72,11 +72,7 @@ async def get_user_card(bot_id: str, user_id: str) -> Union[bytes, str]:
             anchor='mm',
         )
 
-        if user_data.sr_uid:
-            sruid_text = f'星铁UID {user_data.sr_uid}'
-        else:
-            sruid_text = '未发现星铁UID'
-
+        sruid_text = f'星铁UID {user_data.sr_uid}' if user_data.sr_uid else '未发现星铁UID'
         user_draw.text(
             (375, 119),
             sruid_text,

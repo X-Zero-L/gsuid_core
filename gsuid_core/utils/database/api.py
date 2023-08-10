@@ -83,6 +83,4 @@ async def get_uid(
             ev.text = ev.text.replace(uid, '')
     else:
         uid = await bind_model.get_uid_by_game(user_id, ev.bot_id, game_name)
-    if get_user_id:
-        return uid, user_id
-    return uid
+    return (uid, user_id) if get_user_id else uid

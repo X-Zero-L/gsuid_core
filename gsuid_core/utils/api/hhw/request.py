@@ -29,21 +29,18 @@ async def get_abyss_review(
 
     floor_data = data.find_all('td')
     abyss_list = []
-    result = {}
     for index, td in enumerate(floor_data):
-        temp = []
         if 'Monsters' in td.text:
             monsters = floor_data[index + 1].find_all('a')
-            for monster in monsters:
-                if monster.text:
-                    temp.append(monster.text)
-            if temp:
+            if temp := [monster.text for monster in monsters if monster.text]:
                 abyss_list.append(temp)
 
-    for index, half in enumerate(['-1上', '-1下', '-2上', '-2下', '-3上', '-3下']):
-        result[f'{floor}{half}'] = abyss_list[index]
-
-    return result
+    return {
+        f'{floor}{half}': abyss_list[index]
+        for index, half in enumerate(
+            ['-1上', '-1下', '-2上', '-2下', '-3上', '-3下']
+        )
+    }
 
 
 async def get_abyss_review_raw() -> bytes:

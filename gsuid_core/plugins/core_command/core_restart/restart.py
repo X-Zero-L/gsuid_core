@@ -58,13 +58,12 @@ async def restart_genshinuid(
 
 
 async def restart_message() -> dict:
-    if update_log_path.exists():
-        with open(update_log_path, 'r', encoding='utf-8') as f:
-            update_log = json.load(f)
-        msg = f'{update_log["msg"]}\n重启时间:{update_log["time"]}'
-        update_log['msg'] = msg
-        os.remove(update_log_path)
-        os.remove(restart_sh_path)
-        return update_log
-    else:
+    if not update_log_path.exists():
         return {}
+    with open(update_log_path, 'r', encoding='utf-8') as f:
+        update_log = json.load(f)
+    msg = f'{update_log["msg"]}\n重启时间:{update_log["time"]}'
+    update_log['msg'] = msg
+    os.remove(update_log_path)
+    os.remove(restart_sh_path)
+    return update_log

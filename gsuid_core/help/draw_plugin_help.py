@@ -34,10 +34,11 @@ async def get_help(
     if help_path.exists() and name in cache and cache[name]:
         return await convert_img(Image.open(help_path))
 
-    if sub_color is None and is_dark:
-        sub_color = tuple(x - 50 for x in text_color if x > 50)
-    elif sub_color is None and not is_dark:
-        sub_color = tuple(x + 50 for x in text_color if x < 205)
+    if sub_color is None:
+        if is_dark:
+            sub_color = tuple(x - 50 for x in text_color if x > 50)
+        else:
+            sub_color = tuple(x + 50 for x in text_color if x < 205)
 
     title = Image.new('RGBA', (900, 600))
     icon = icon.resize((300, 300))
@@ -76,11 +77,7 @@ async def get_help(
         for index, tr in enumerate(sv_data):
             bt = deepcopy(button)
             bt_draw = ImageDraw.Draw(bt)
-            if len(tr['name']) > 8:
-                tr_name = tr['name'][:5] + '..'
-            else:
-                tr_name = tr['name']
-
+            tr_name = tr['name'][:5] + '..' if len(tr['name']) > 8 else tr['name']
             bt_draw.text((105, 28), tr_name, text_color, font(26), 'mm')
             bt_draw.text((105, 51), tr['eg'], sub_color, font(17), 'mm')
             offset_x = 210 * (index % 4)
@@ -88,7 +85,7 @@ async def get_help(
             sv_img = easy_alpha_composite(
                 sv_img, bt, (26 + offset_x, 83 + offset_y)
             )
-            # sv_img.paste(bt, (26 + offset_x, 83 + offset_y), bt)
+                    # sv_img.paste(bt, (26 + offset_x, 83 + offset_y), bt)
 
         sv_img_list.append(sv_img)
 

@@ -56,18 +56,16 @@ class SQLA:
         return await GsBind.select_data(user_id, self.bot_id)
 
     async def insert_bind_data(self, user_id: str, **data) -> int:
-        group_id = data['group_id'] if 'group_id' in data else None
-        new_uid: str = data['uid'] if 'uid' in data else ''
-        new_uid = new_uid.strip()
-        new_sr_uid: str = data['sr_uid'] if 'sr_uid' in data else ''
-        new_sr_uid = new_sr_uid.strip()
-        if new_uid:
+        group_id = data.get('group_id', None)
+        new_uid: str = data.get('uid', '')
+        new_sr_uid: str = data.get('sr_uid', '')
+        if new_uid := new_uid.strip():
             retcode = await GsBind.insert_uid(
                 user_id, self.bot_id, new_uid, group_id, 9, True
             )
             if retcode:
                 return retcode
-        if new_sr_uid:
+        if new_sr_uid := new_sr_uid.strip():
             retcode = await GsBind.insert_uid(
                 user_id,
                 self.bot_id,
@@ -82,8 +80,8 @@ class SQLA:
         return 0
 
     async def delete_bind_data(self, user_id: str, **data) -> int:
-        _uid = data['uid'] if 'uid' in data else ''
-        _sr_uid = data['sr_uid'] if 'sr_uid' in data else ''
+        _uid = data.get('uid', '')
+        _sr_uid = data.get('sr_uid', '')
         if _uid:
             return await GsBind.delete_uid(user_id, self.bot_id, _uid)
         elif _sr_uid:
@@ -223,7 +221,7 @@ class SQLA:
 
             account_id = re.search(r'account_id=(\d*)', cookie)
             assert account_id is not None
-            account_id = str(account_id.group(1))
+            account_id = str(account_id[1])
 
             retcode = await GsUser.insert_data(
                 user_id=user_id,
@@ -244,10 +242,7 @@ class SQLA:
                 sr_push_switch='off',
                 sr_sign_switch='off',
             )
-        if retcode == 0:
-            return True
-        else:
-            return False
+        return retcode == 0
 
     async def update_user_data(self, uid: str, data: Dict = {}):
         return await GsUser.update_data_by_uid(
@@ -268,7 +263,7 @@ class SQLA:
 
     async def user_exists(self, uid: str) -> bool:
         data = await self.select_user_data(uid)
-        return True if data else False
+        return bool(data)
 
     async def update_user_stoken(
         self, uid: str, stoken: Optional[str]

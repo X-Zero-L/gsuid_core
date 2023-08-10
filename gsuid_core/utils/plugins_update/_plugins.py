@@ -54,10 +54,10 @@ async def run_poetry_install(path: Optional[Path] = None) -> int:
 
     logger.info(output)
 
-    retcode = -1 if proc.returncode is None else proc.returncode
     if 'No dependencies to install or update' in output:
-        retcode = 200
-    return retcode
+        return 200
+    else:
+        return -1 if proc.returncode is None else proc.returncode
 
 
 def check_retcode(retcode: int) -> str:
@@ -105,13 +105,12 @@ async def get_plugins_url(name: str) -> Optional[Dict[str, str]]:
 
     if name in plugins_list:
         return plugins_list[name]
+    for _n in plugins_list:
+        sim = len(set(_n) & set(name))
+        if sim >= 0.5 * len(_n):
+            return plugins_list[_n]
     else:
-        for _n in plugins_list:
-            sim = len(set(_n) & set(name))
-            if sim >= 0.5 * len(_n):
-                return plugins_list[_n]
-        else:
-            return None
+        return None
 
 
 def install_plugins(plugins: Dict[str, str]) -> str:
@@ -141,14 +140,13 @@ async def install_plugin(plugin_name: str) -> int:
 
 def check_plugins(plugin_name: str) -> Optional[Repo]:
     path = PLUGINS_PATH / plugin_name
-    if path.exists():
-        try:
-            repo = Repo(path)
-        except InvalidGitRepositoryError:
-            return None
-        return repo
-    else:
+    if not path.exists():
         return None
+    try:
+        repo = Repo(path)
+    except InvalidGitRepositoryError:
+        return None
+    return repo
 
 
 def check_can_update(repo: Repo) -> bool:
@@ -160,19 +158,14 @@ def check_can_update(repo: Repo) -> bool:
         return False
     local_commit = repo.commit()  # 获取本地最新提交
     remote_commit = remote.fetch()[0].commit  # 获取远程最新提交
-    if local_commit.hexsha == remote_commit.hexsha:  # 比较本地和远程的提交哈希值
-        return False
-    return True
+    return local_commit.hexsha != remote_commit.hexsha
 
 
 def check_status(plugin_name: str) -> int:
     repo = check_plugins(plugin_name)
     if repo is None:
         return 3
-    if check_can_update(repo):
-        return 1
-    else:
-        return 4
+    return 1 if check_can_update(repo) else 4
 
 
 def update_from_git(
@@ -254,6 +247,4 @@ def update_plugins(
             plugin_name = _name
             break
 
-    log_list = update_from_git(level, plugin_name, log_key, log_limit)
-    return log_list
-    return log_list
+    return update_from_git(level, plugin_name, log_key, log_limit)

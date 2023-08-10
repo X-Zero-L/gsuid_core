@@ -64,10 +64,7 @@ class ConvertableColor:
         else:
             h = 360
 
-        if mx == 0:
-            s = 0
-        else:
-            s = df / mx
+        s = 0 if mx == 0 else df / mx
         v = mx
         return f'hsv({h}, {s}, {v})'
 

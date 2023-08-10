@@ -76,19 +76,20 @@ def main():
     @app.post('/genshinuid/setSV/{name}')
     @site.auth.requires('admin')
     async def _set_SV(request: Request, data: Dict, name: str):
-        if name in SL.lst:
-            sv = SL.lst[name]
-            data['pm'] = int(data['pm'])
-            data['black_list'] = data['black_list'].replace('；', ';')
-            data['white_list'] = data['white_list'].replace('；', ';')
+        if name not in SL.lst:
+            return
+        sv = SL.lst[name]
+        data['pm'] = int(data['pm'])
+        data['black_list'] = data['black_list'].replace('；', ';')
+        data['white_list'] = data['white_list'].replace('；', ';')
 
-            data['black_list'] = data['black_list'].split(';')
-            data['white_list'] = data['white_list'].split(';')
-            if data['black_list'] == ['']:
-                data['black_list'] = []
-            if data['white_list'] == ['']:
-                data['white_list'] = []
-            sv.set(**data)
+        data['black_list'] = data['black_list'].split(';')
+        data['white_list'] = data['white_list'].split(';')
+        if data['black_list'] == ['']:
+            data['black_list'] = []
+        if data['white_list'] == ['']:
+            data['white_list'] = []
+        sv.set(**data)
 
     @app.post('/genshinuid/setGsConfig/{config_name}')
     @site.auth.requires('admin')

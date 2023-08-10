@@ -22,8 +22,7 @@ async def get_akasha_abyss_info() -> AkashaAbyssData:
     '''  # noqa: E501
     raw_data = await _akasha_request(AKASHA_ABYSS_URL)
     raw_data = raw_data.lstrip('var static_abyss_total =')
-    data = json.loads(raw_data)
-    return data
+    return json.loads(raw_data)
 
 
 async def get_akasha_all_char_info() -> Dict[str, AKaShaCharData]:
@@ -36,8 +35,7 @@ async def get_akasha_all_char_info() -> Dict[str, AKaShaCharData]:
         .replace('"{', '{')
         .replace('}"', '}')
     )
-    data = json.loads(raw_data)
-    return data
+    return json.loads(raw_data)
 
 
 async def get_akasha_abyss_rank(is_info: bool = False) -> AKaShaRank:
@@ -48,9 +46,7 @@ async def get_akasha_abyss_rank(is_info: bool = False) -> AKaShaRank:
     data2 = data_list[1].lstrip('var static_abyss_record_dict =')
     schedule_version_dict = json.loads(data1)
     abyss_record_dict = json.loads(data2)
-    if is_info:
-        return schedule_version_dict
-    return abyss_record_dict
+    return schedule_version_dict if is_info else abyss_record_dict
 
 
 async def _akasha_request(

@@ -13,20 +13,15 @@ from .config_default import CONIFG_DEFAULT
 class StringConfig:
     def __new__(cls, *args, **kwargs):
         # 判断sv是否已经被初始化
-        if len(args) >= 1:
-            name = args[0]
-        else:
-            name = kwargs.get('config_name')
-
+        name = args[0] if args else kwargs.get('config_name')
         if name is None:
             raise ValueError('Config.name is None!')
 
         if name in all_config_list:
             return all_config_list[name]
-        else:
-            _config = super().__new__(cls)
-            all_config_list[name] = _config
-            return _config
+        _config = super().__new__(cls)
+        all_config_list[name] = _config
+        return _config
 
     def __init__(
         self, config_name: str, CONFIG_PATH: Path, config_list: Dict[str, GSC]
@@ -67,11 +62,7 @@ class StringConfig:
             if key not in self.config:
                 self.config[key] = self.config_list[key]
 
-        # 对默认值没有的值，直接删除
-        delete_keys = []
-        for key in self.config:
-            if key not in self.config_list:
-                delete_keys.append(key)
+        delete_keys = [key for key in self.config if key not in self.config_list]
         for key in delete_keys:
             self.config.pop(key)
 

@@ -6,10 +6,7 @@ from color import Color, check_if_color
 class BaseTextContainer(list):
     @property
     def len(self):
-        _len_count = 0
-        for i_ in self:
-            _len_count += len(i_)
-        return _len_count
+        return sum(len(i_) for i_ in self)
 
     def __and__(self, other):
         self.append(other)
@@ -94,16 +91,15 @@ def split_ctg(
         if len(t) <= buffer.free_size:
             # buffer & t
             continue
-        if len(t) > buffer.free_size:
-            _long_text_result = split_ep(t, length, buffer.free_size)
-            # buffer & _long_text_result[0]
-            result.append(buffer.copy())
-            buffer.clear()
-            if len(_long_text_result[1][-1]) < length:
-                buffer = TextBuffer(_long_text_result[1][-1:], length)
-                result.append(_long_text_result[1][:-1])
-            else:
-                result.append(_long_text_result[1])
+        _long_text_result = split_ep(t, length, buffer.free_size)
+        # buffer & _long_text_result[0]
+        result.append(buffer.copy())
+        buffer.clear()
+        if len(_long_text_result[1][-1]) < length:
+            buffer = TextBuffer(_long_text_result[1][-1:], length)
+            result.append(_long_text_result[1][:-1])
+        else:
+            result.append(_long_text_result[1])
         if buffer.free_size == 0:
             result.append(buffer.copy())
             buffer.clear()
@@ -124,7 +120,7 @@ if __name__ == '__main__':
         )
         groups_ = ColorTextGroup(list(params))
         f_ = pformat(split_ctg(groups_, length)).split('\n')
-        print(Fore.CYAN, '\t', f_[0], '\n\t'.join(f_[0:]))
+        print(Fore.CYAN, '\t', f_[0], '\n\t'.join(f_[:]))
 
     print('*** ColorTextGroup cutting test ***')
     test_ctg(
